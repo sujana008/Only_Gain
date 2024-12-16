@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loss Tracking - Admin</title>
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="stylesheet" href="./admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Admin Panel</h2>
+            <nav>
+                <ul>
+                    <li><a href="admin.html">Dashboard</a></li>
+                    <li class="dropdown">
+                        <a class="dropdown-btn">User Roles</a>
+                        <ul class="dropdown-content">
+                            <li><a href="../farm manager/farm_manager.html">Farm Manager</a></li>
+                            <li><a href="../retailer/all_orders.html">Retailer</a></li>
+                            <li><a href="../wholesaler/wholesaler.html">Wholesaler</a></li>
+                            <li><a href="../qa officer/inspections.html">QA Officer</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="./loss_tracking_admin.html">Loss Tracking</a></li>
+                    <li><a href="./admin_loss_cause_report.html">Reports</a></li>
+                    <li><a href="../index.html">Log Out</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header class="head">
+                <h1>Loss Tracking Overview</h1>
+            </header>
+
+            <!-- Combined Loss Graph -->
+            <section class="graphs-section">
+                <div class="graph">
+                    <canvas id="combinedLossGraph"></canvas>
+                </div>
+            </section>
+
+            <!-- Loss Tracking Graphs (Handling, Storage, Transportation) -->
+            <section class="graphs-section">
+                <div class="graph">
+                    <canvas id="handlingLossGraph"></canvas>
+                </div>
+                <div class="graph">
+                    <canvas id="storageLossGraph"></canvas>
+                </div>
+            </section>
+
+            <section class="graphs-section">
+                <div class="graph">
+                    <canvas id="transportationLossGraph"></canvas>
+                </div>
+            </section>
+
+            <!-- Loss Stats Boxes -->
+            <section class="stats-section">
+                <div class="stat-box">
+                    <h3>After Harvest Loss</h3>
+                    <p id="after-harvest-loss">150 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>In Storage Loss</h3>
+                    <p id="in-storage-loss">200 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Load/Unload Loss</h3>
+                    <p id="load-unload-loss">100 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Transportation Loss</h3>
+                    <p id="transportation-loss">120 kg</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Data Arrays for the graphs (Example)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const handlingLossData = [50, 55, 52, 48, 50, 47, 50, 53, 51, 55, 57, 59]; // Loss during handling over months
+        const storageLossDataControlled = [10, 12, 9, 15, 8, 7, 6, 10, 11, 12, 9, 8]; // Loss in controlled storage
+        const storageLossDataTraditional = [8, 9, 7, 6, 5, 4, 3, 5, 6, 5, 7, 6]; // Loss in traditional storage
+        const storageLossDataSilo = [5, 6, 4, 5, 6, 5, 4, 6, 5, 7, 6, 5]; // Loss in silo storage
+        const transportationLossData = [10, 12, 11, 15, 12, 14, 13, 15, 14, 16, 17, 18]; // Loss during transportation
+        const numberOfTransportations = [2, 3, 4, 5, 3, 4, 5, 6, 4, 5, 6, 7]; // Number of transportations per month
+
+        // Combined Loss Graph (Shows total loss from all three types)
+        const combinedLossCtx = document.getElementById('combinedLossGraph').getContext('2d');
+        const combinedLossGraph = new Chart(combinedLossCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Handling Loss (kg)',
+                        data: handlingLossData,
+                        borderColor: 'rgba(58, 90, 64, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Storage Loss (kg)',
+                        data: storageLossDataControlled.map((_, index) => storageLossDataControlled[index] + storageLossDataTraditional[index] + storageLossDataSilo[index]),
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Transportation Loss (kg)',
+                        data: transportationLossData,
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Handling Loss Graph (Monthly Loss)
+        const handlingLossCtx = document.getElementById('handlingLossGraph').getContext('2d');
+        const handlingLossGraph = new Chart(handlingLossCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Handling Loss (kg)',
+                    data: handlingLossData,
+                    borderColor: 'rgba(58, 90, 64, 1)',
+                    fill: false,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Storage Loss Graph (Controlled, Traditional, Silo)
+        const storageLossCtx = document.getElementById('storageLossGraph').getContext('2d');
+        const storageLossGraph = new Chart(storageLossCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Controlled Storage Loss (kg)',
+                        data: storageLossDataControlled,
+                        borderColor: 'rgba(58, 90, 64, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Traditional Storage Loss (kg)',
+                        data: storageLossDataTraditional,
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Silo Storage Loss (kg)',
+                        data: storageLossDataSilo,
+                        borderColor: 'rgba(241, 196, 15, 1)',
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Transportation Loss Graph (Loss vs. Number of Transportations)
+        const transportationLossCtx = document.getElementById('transportationLossGraph').getContext('2d');
+        const transportationLossGraph = new Chart(transportationLossCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Transportation Loss (kg)',
+                        data: transportationLossData,
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Number of Transportations',
+                        data: numberOfTransportations,
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Update the total loss amounts (dynamically calculated)
+        document.getElementById('after-harvest-loss').textContent = `${handlingLossData.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('in-storage-loss').textContent = `${storageLossDataControlled.reduce((acc, val) => acc + val, 0) + storageLossDataTraditional.reduce((acc, val) => acc + val, 0) + storageLossDataSilo.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('load-unload-loss').textContent = `${handlingLossData.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('transportation-loss').textContent = `${transportationLossData.reduce((acc, val) => acc + val, 0)} kg`;
+    </script>
+</body>
+</html>

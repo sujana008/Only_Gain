@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loss Causes - Admin</title>
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="stylesheet" href="./admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Admin Panel</h2>
+            <nav>
+                <ul>
+                    <li><a href="admin.html">Dashboard</a></li>
+                    <li class="dropdown">
+                        <a class="dropdown-btn">User Roles</a>
+                        <ul class="dropdown-content">
+                            <li><a href="../farm manager/farm_manager.html">Farm Manager</a></li>
+                            <li><a href="../retailer/all_orders.html">Retailer</a></li>
+                            <li><a href="../wholesaler/wholesaler.html">Wholesaler</a></li>
+                            <li><a href="../qa officer/inspections.html">QA Officer</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="./loss_tracking_admin.html">Loss Tracking</a></li>
+                    <li><a href="./admin_loss_cause_report.html">Reports</a></li>
+                    <li><a href="../index.html">Log Out</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header class="head">
+                <h1>Loss Causes Overview</h1>
+            </header>
+
+            <!-- Loss Causes Graph -->
+            <section class="graphs-section">
+                <div class="graph">
+                    <canvas id="lossCausesGraph"></canvas>
+                </div>
+            </section>
+
+            <!-- Loss Causes Boxes -->
+            <section class="stats-section">
+                <div class="stat-box">
+                    <h3>Physical Damage</h3>
+                    <p id="physical-damage-loss">50 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Spoilage</h3>
+                    <p id="spoilage-loss">40 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Pest Infestation</h3>
+                    <p id="pest-infestation-loss">30 kg</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Over Ripening</h3>
+                    <p id="over-ripening-loss">20 kg</p>
+                </div>
+            </section>
+
+            <!-- Loss Report Table -->
+            <!-- Loss Causes Report Section -->
+<section class="report-section">
+    <h2>Loss Report</h2>
+
+    <!-- Form to Add a New Loss Report -->
+    <form action="loss_report.php" method="POST" style="margin-bottom: 20px;">
+        <h3>Add Loss Report</h3>
+        <label for="week">Week:</label>
+        <input type="text" name="week" required>
+        <label for="physical_damage">Physical Damage (kg):</label>
+        <input type="number" name="physical_damage" required>
+        <label for="spoilage">Spoilage (kg):</label>
+        <input type="number" name="spoilage" required>
+        <label for="pest_infestation">Pest Infestation (kg):</label>
+        <input type="number" name="pest_infestation" required>
+        <label for="over_ripening">Over Ripening (kg):</label>
+        <input type="number" name="over_ripening" required>
+        <button type="submit" name="add_report" class="btn-primary">Add Report</button>
+    </form>
+
+   
+
+   
+
+ 
+
+    <script>
+        // Loss Causes Data (Example)
+        const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+        const physicalDamageData = [50, 55, 52, 48, 50]; // Example data for Physical Damage
+        const spoilageData = [40, 42, 43, 39, 41]; // Example data for Spoilage
+        const pestInfestationData = [30, 32, 31, 29, 30]; // Example data for Pest Infestation
+        const overRipeningData = [20, 18, 22, 21, 20]; // Example data for Over Ripening
+
+        // Loss Causes Graph
+        const lossCausesCtx = document.getElementById('lossCausesGraph').getContext('2d');
+        const lossCausesGraph = new Chart(lossCausesCtx, {
+            type: 'line',
+            data: {
+                labels: weeks,
+                datasets: [
+                    {
+                        label: 'Physical Damage (kg)',
+                        data: physicalDamageData,
+                        borderColor: 'rgba(58, 90, 64, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Spoilage (kg)',
+                        data: spoilageData,
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Pest Infestation (kg)',
+                        data: pestInfestationData,
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Over Ripening (kg)',
+                        data: overRipeningData,
+                        borderColor: 'rgba(241, 196, 15, 1)',
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Update the total loss amounts (dynamic values)
+        document.getElementById('physical-damage-loss').textContent = `${physicalDamageData.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('spoilage-loss').textContent = `${spoilageData.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('pest-infestation-loss').textContent = `${pestInfestationData.reduce((acc, val) => acc + val, 0)} kg`;
+        document.getElementById('over-ripening-loss').textContent = `${overRipeningData.reduce((acc, val) => acc + val, 0)} kg`;
+
+        // Add Report functionality (dynamically adding rows to the report table)
+        const reportTableBody = document.querySelector('table tbody');
+        const addReportBtn = document.getElementById('add-report-btn');
+
+        addReportBtn.addEventListener('click', () => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${weeks.length + 1}</td>
+                <td><input type="number" placeholder="Enter loss in kg" /></td>
+                <td><input type="number" placeholder="Enter loss in kg" /></td>
+                <td><input type="number" placeholder="Enter loss in kg" /></td>
+                <td><input type="number" placeholder="Enter loss in kg" /></td>
+            `;
+            reportTableBody.appendChild(newRow);
+        });
+    </script>
+</body>
+</html>
